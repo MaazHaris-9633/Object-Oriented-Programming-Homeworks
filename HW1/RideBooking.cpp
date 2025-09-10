@@ -65,10 +65,8 @@ Ride BookRide(std::string name) {
     // TODO: generate a Ride ID, set ride status to "Cancelled" and driverName
     // TODO: to ""
 
-    //? Prompting user for pickup, drop-off and distance
-    std::string pickup_location, dropoff_location, status, driver_name,
-        drivers_available[driver_count];
-    double distance, fare;
+    std::string pickup_location, dropoff_location, status, driver_name;
+    double      distance, fare;
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Booking a ride for " << name << std::endl;
     std::cout << "Enter pickup location: ";
@@ -88,15 +86,20 @@ Ride BookRide(std::string name) {
     std::cin.ignore();
     fare = GetFare(distance);
 
-    //?Looping through drivers to show available ones
+    // Create a list of available drivers and count them
+    std::string available_drivers[MAX_DRIVERS];
+    int         available_count = 0;
+
+    //? Looping through drivers to find available ones
     for (int i = 0; i < driver_count; i++) {
         if (!IsAvailable(Drivers[i], rideDetails)) {
-            drivers_available[i] = Drivers[i];
+            available_drivers[available_count] = Drivers[i];
+            available_count++;
         }
     }
 
-    //? Prompting user to select a driver if their is a driver available
-    if (driver_count == 0) {
+    //? Check if there are any available drivers
+    if (available_count == 0) {
         std::cout << "----------------------------------" << std::endl;
         std::cout << "No drivers available. Ride Cancelled." << std::endl;
         status      = "Cancelled";
@@ -104,46 +107,49 @@ Ride BookRide(std::string name) {
     } else {
         bool driver_found = false;
         do {
-            if (sizeof(drivers_available) == 0) {
-                std::cout << "------------------------------" << std::endl;
-                std::cout << "No drivers available. Ride Cancelled."
-                          << std::endl;
-                status      = "Cancelled";
-                driver_name = "";
-            } else {
-                std::cout << "------------------------------" << std::endl;
-                std::cout << "Available Drivers: " << std::endl;
-                for (int i = 0; i < driver_count; i++) {
-                    if (drivers_available[i] != "") {
-                        std::cout << i + 1 << ". " << drivers_available[i]
-                                  << std::endl;
-                    }
-                }
-                std::cout << "-----------------------------------------------"
-                          << std::endl
-                          << "Select the driver by entering the name of the "
-                          << "driver: ";
-                std::getline(std::cin, driver_name);
-                if (driver_name == "") {
-                    std::cout << "Invalid Option! Try Again " << std::endl;
-                }
-                for (int i = 0; i < driver_count; i++) {
-                    if (driver_name == drivers_available[i]) {
-                        driver_found = true;
-                        break;
-                    }
-                }
-                if (!driver_found) {
-                    std::cout << "Driver '" << driver_name
-                              << "' not found! Please select from the "
-                                 "available drivers."
-                              << std::endl;
-                }
-
-                status = "Ongoing";
+            std::cout << "------------------------------" << std::endl;
+            std::cout << "Available Drivers: " << std::endl;
+            for (int i = 0; i < available_count; i++) {
+                std::cout << i + 1 << ". " << available_drivers[i] << std::endl;
             }
+            std::cout
+                << "-----------------------------------------------"
+                << std::endl
+                << "Select the driver by entering the name of the driver: ";
+            std::getline(std::cin, driver_name);
+
+            if (driver_name == "") {
+                std::cout << "Invalid Option! Try Again " << std::endl;
+                continue;
+            }
+
+            // Check if selected driver is in the available list
+            for (int i = 0; i < available_count; i++) {
+                if (driver_name == available_drivers[i]) {
+                    driver_found = true;
+                    status       = "Ongoing";
+                    std::cout << "----------------------------------"
+                              << std::endl
+                              << "Your ride from " << pickup_location << " to "
+                              << dropoff_location << " with the driver "
+                              << driver_name << " is confirmed." << std::endl;
+                    std::cout << "Fare: $" << fare << std::endl;
+                    std::cout << "----------------------------------"
+                              << std::endl;
+                    break;
+                }
+            }
+
+            if (!driver_found) {
+                std::cout
+                    << "Driver '" << driver_name
+                    << "' not found! Please select from the available drivers."
+                    << std::endl;
+            }
+
         } while (driver_name == "" || !driver_found);
     }
+
     //? Creating a new Ride struct and populating its fields
     Ride newRide;
     newRide.riderName       = name;
@@ -380,9 +386,9 @@ int main() {
                                           << " status updated to " << new_status
                                           << "." << std::endl;
                                 ride_found = true;
-                                break;
                             }
                         }
+                        break;
                     }
                     case 3: {
                         double total_earnings =
