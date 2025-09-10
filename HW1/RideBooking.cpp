@@ -211,6 +211,8 @@ int ChangeStatus(std::string name, Ride rides[], int count) {
 double CalculateTotal(std::string driverName, Ride rides[]) {
     // TODO: Add up fares of rides where driverName matches and status is
     // TODO: "Completed"
+
+    //! Looping through rides to sum up fares of completed rides for the driver
     double total = 0.0;
     for (int i = 0; i < ride_count; i++) {
         if (rides[i].driverName == driverName &&
@@ -241,12 +243,17 @@ int main() {
                                 '\n');
             }
         } while (role != 1 && role != 2 || std::cin.fail());
+        std::cout << "You selected option " << role << std::endl;
+        std::cout << "-----------------------------------------------"
+                  << std::endl;
         std::cin.ignore();
 
         //? - Prompt for name
         std::string name;
         std::cout << "Please enter your name: ";
         std::getline(std::cin, name);
+        std::cout << "-----------------------------------------------"
+                  << std::endl;
 
         //* Based on Role displaying the appropriate role menu
 
@@ -291,9 +298,11 @@ int main() {
                                 rideDetails[i].riderName == name &&
                                 rideDetails[i].status == "Ongoing") {
                                 rideDetails[i].status = "Cancelled";
-                                std::cout << "Ride ID " << ride_id
-                                          << " has been cancelled."
-                                          << std::endl;
+                                std::cout
+                                    << "Ride ID " << ride_id
+                                    << " has been cancelled." << std::endl
+                                    << "----------------------------------"
+                                    << std::endl;
                                 ride_found = true;
                                 break;
                             }
@@ -301,6 +310,7 @@ int main() {
                         if (!ride_found) {
                             std::cout << "Ride ID " << ride_id
                                       << " not found or cannot be cancelled."
+                                      << "----------------------------------"
                                       << std::endl;
                         }
                     }
