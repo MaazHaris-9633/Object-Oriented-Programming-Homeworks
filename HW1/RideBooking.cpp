@@ -1,3 +1,4 @@
+#include <cctype>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -67,12 +68,23 @@ Ride BookRide(std::string name) {
 
     std::string pickup_location, dropoff_location, status, driver_name;
     double      distance, fare;
-    std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Booking a ride for " << name << std::endl;
-    std::cout << "Enter pickup location: ";
-    std::getline(std::cin, pickup_location);
-    std::cout << "Enter drop-off location: ";
-    std::getline(std::cin, dropoff_location);
+    std::cin.ignore();
+    do {
+        std::cout << "Enter pickup location: ";
+        std::getline(std::cin, pickup_location);
+        std::cout << "Enter drop-off location: ";
+        std::getline(std::cin, dropoff_location);
+
+        if (pickup_location == dropoff_location) {
+            std::cout << "Pick-up and Drop-off Location can't be same! Enter a "
+                         "different pick-up and drop-off locations"
+                      << std::endl
+                      << "-----------------------------------------------"
+                      << std::endl;
+        }
+    } while (pickup_location == dropoff_location);
+
     do {  //? Validating distance input
         std::cout << "Enter distance (in KM): ";
         std::cin >> distance;
@@ -83,6 +95,7 @@ Ride BookRide(std::string name) {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
     } while (std::cin.fail() || distance <= 0);
+
     std::cin.ignore();
     fare = GetFare(distance);
 
@@ -100,14 +113,16 @@ Ride BookRide(std::string name) {
 
     //? Check if there are any available drivers
     if (available_count == 0) {
-        std::cout << "----------------------------------" << std::endl;
+        std::cout << "-----------------------------------------------"
+                  << std::endl;
         std::cout << "No drivers available. Ride Cancelled." << std::endl;
         status      = "Cancelled";
         driver_name = "";
     } else {
         bool driver_found = false;
         do {
-            std::cout << "------------------------------" << std::endl;
+            std::cout << "-----------------------------------------------"
+                      << std::endl;
             std::cout << "Available Drivers: " << std::endl;
             for (int i = 0; i < available_count; i++) {
                 std::cout << i + 1 << ". " << available_drivers[i] << std::endl;
@@ -128,14 +143,16 @@ Ride BookRide(std::string name) {
                 if (driver_name == available_drivers[i]) {
                     driver_found = true;
                     status       = "Ongoing";
-                    std::cout << "----------------------------------"
-                              << std::endl
-                              << "Your ride from " << pickup_location << " to "
-                              << dropoff_location << " with the driver "
-                              << driver_name << " is confirmed." << std::endl;
+                    std::cout
+                        << "-----------------------------------------------"
+                        << std::endl
+                        << "Your ride from " << pickup_location << " to "
+                        << dropoff_location << " with the driver "
+                        << driver_name << " is confirmed." << std::endl;
                     std::cout << "Fare: $" << fare << std::endl;
-                    std::cout << "----------------------------------"
-                              << std::endl;
+                    std::cout
+                        << "-----------------------------------------------"
+                        << std::endl;
                     break;
                 }
             }
@@ -173,14 +190,18 @@ void ViewRides(std::string name, Ride rides[], std::string status = "") {
     // TODO: was passed
     //? Checking if there are any rides created yet
     if (ride_count == 0) {
-        std::cout << "There are no rides created yet." << std::endl;
+        std::cout << "There are no rides created yet." << std::endl
+                  << "-----------------------------------------------"
+                  << std::endl;
         return;
     }
+    bool found = false;
     //? Looping through rides to find matches
     for (int i = 0; i < ride_count; i++) {
         if ((rides[i].riderName == name || rides[i].driverName == name) &&
             (status == "" || rides[i].status == status)) {
-            std::cout << "-------------------------" << std::endl
+            std::cout << "-----------------------------------------------"
+                      << std::endl
                       << "Ride ID: " << rides[i].rideID << std::endl
                       << "Rider Name: " << rides[i].riderName << std::endl
                       << "Driver Name: " << rides[i].driverName << std::endl
@@ -191,10 +212,20 @@ void ViewRides(std::string name, Ride rides[], std::string status = "") {
                       << "Distance: " << rides[i].distance << " KM" << std::endl
                       << "Fare: $" << rides[i].fare << std::endl
                       << "Status: " << rides[i].status << std::endl
-                      << "-------------------------" << std::endl;
-        } else {
-            std::cout << "No rides found for " << name << std::endl;
+                      << "-----------------------------------------------"
+                      << std::endl;
+            found = true;
         }
+    }
+    if (!found) {
+        if (status == "") {
+            std::cout << "No rides found for " << name << std::endl;
+        } else {
+            std::cout << "No " << status << " rides found for " << name
+                      << std::endl;
+        }
+        std::cout << "-----------------------------------------------"
+                  << std::endl;
     }
 }
 
@@ -204,6 +235,29 @@ int ChangeStatus(std::string name, Ride rides[], int count) {
     // TODO: third parameter
     // TODO: Ask user to enter the Ride ID to update
     // TODO: Return the Ride ID so status can be updated in main
+
+    if (ride_count == 0) {
+        std::cout << "There are no rides created yet." << std::endl
+                  << "-----------------------------------------------"
+                  << std::endl;
+        return 0;
+    }
+
+    bool ongoing_rides = false;
+    for (int i = 0; i < ride_count; i++) {
+        if ((rides[i].riderName == name || rides[i].driverName == name) &&
+            rides[i].status == "Ongoing") {
+            ongoing_rides = true;
+            break;
+        }
+    }
+
+    if (!ongoing_rides) {
+        std::cout << "No ongoing rides found for " << name << std::endl;
+        std::cout << "-----------------------------------------------"
+                  << std::endl;
+        return 0;
+    }
 
     ViewRides(name, rides, "Ongoing");
     int ride_id;
@@ -256,11 +310,32 @@ int main() {
 
         //? - Prompt for name
         std::string name;
-        std::cout << "Please enter your name: ";
-        std::getline(std::cin, name);
-        std::cout << "-----------------------------------------------"
-                  << std::endl;
+        bool        is_digit;
+        do {
+            std::cout << "Please enter your name: ";
+            std::getline(std::cin, name);
+            std::cout << "-----------------------------------------------"
+                      << std::endl;
+            is_digit = false;
+            for (int i = 0; i < name.length(); i++) {
+                if (name[i] >= '0' && name[i] <= '9') {
+                    is_digit = true;
+                    break;
+                }
+            }
+            if (name.length() < 3 || name.length() > 30) {
+                std::cout << "Name must have atleast more than 3 and less than "
+                             "30 charaacters"
+                          << "-----------------------------------------------"
+                          << std::endl;
+            }
 
+            if (is_digit) {
+                std::cout << "Name should not contain numbers. Try again!"
+                          << std::endl;
+            }
+
+        } while (is_digit || (name.length() < 3 || name.length() > 30));
         //* Based on Role displaying the appropriate role menu
 
         switch (role) {
@@ -275,11 +350,17 @@ int main() {
                               << "4. Return to Main Menu" << std::endl;
                     std::cout << "Please select an option: ";
                     std::cin >> rider_option;
-                    std::cin.ignore();
+                    std::cout
+                        << "-----------------------------------------------"
+                        << std::endl;
                     if (rider_option < 1 || rider_option > 4) {
                         std::cout << "Invalid Option! Try Again " << std::endl;
+                        std::cin.clear();
+                        std::cin.ignore(
+                            std::numeric_limits<std::streamsize>::max(), '\n');
                     }
-                } while (rider_option < 1 || rider_option > 4);
+                } while (rider_option < 1 || rider_option > 4 ||
+                         std::cin.fail());
                 //~ Taking action based on the rider option selected
                 switch (rider_option) {
                     case 1:
@@ -298,17 +379,20 @@ int main() {
                     case 3: {
                         int ride_id =
                             ChangeStatus(name, rideDetails, ride_count);
+                        if (ride_id == 0) {
+                            break;
+                        }
                         bool ride_found = false;
                         for (int i = 0; i < ride_count; i++) {
                             if (rideDetails[i].rideID == ride_id &&
                                 rideDetails[i].riderName == name &&
                                 rideDetails[i].status == "Ongoing") {
                                 rideDetails[i].status = "Cancelled";
-                                std::cout
-                                    << "Ride ID " << ride_id
-                                    << " has been cancelled." << std::endl
-                                    << "----------------------------------"
-                                    << std::endl;
+                                std::cout << "Ride ID " << ride_id
+                                          << " has been cancelled." << std::endl
+                                          << "---------------------------------"
+                                             "--------------"
+                                          << std::endl;
                                 ride_found = true;
                                 break;
                             }
@@ -316,7 +400,9 @@ int main() {
                         if (!ride_found) {
                             std::cout << "Ride ID " << ride_id
                                       << " not found or cannot be cancelled."
-                                      << "----------------------------------"
+                                      << std::endl
+                                      << "-------------------------------------"
+                                         "----------"
                                       << std::endl;
                         }
                     }
@@ -353,8 +439,12 @@ int main() {
                     std::cin.ignore();
                     if (driver_option < 1 || driver_option > 4) {
                         std::cout << "Invalid Option! Try Again " << std::endl;
+                        std::cin.clear();
+                        std::cin.ignore(
+                            std::numeric_limits<std::streamsize>::max(), '\n');
                     }
-                } while (driver_option < 1 || driver_option > 4);
+                } while (driver_option < 1 || driver_option > 4 ||
+                         std::cin.fail());
 
                 switch (driver_option) {
                     case 1:
